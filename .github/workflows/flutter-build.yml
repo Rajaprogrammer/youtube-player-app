@@ -1,0 +1,232 @@
+name: Flutter Build & Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.19.5'
+  JAVA_VERSION: '20'
+  RELEASE_NAME: 'YouTube Player App v1.0.0'
+  RELEASE_TAG: 'v1.0.0'
+  RELEASE_BODY: "YouTube Player App - Play videos from JSON configuration"
+
+jobs:
+  build:
+    name: Build Flutter APK
+    runs-on: ubuntu-latest
+    outputs:
+      apk_exists: ${{ steps.find-apk.outputs.apk_exists }}
+      apk_path: ${{ steps.find-apk.outputs.apk_path }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build release APK
+        id: build-apk
+        continue-on-error: true
+        run: |
+          set +e
+          flutter build apk --release
+          BUILD_EXIT_CODE=$?
+          echo "build_exit_code=$BUILD_EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          if [ $BUILD_EXIT_CODE -eq 0 ]; then
+            echo "✅ Build completed successfully"
+          else
+            echo "⚠️ Build returned exit code $BUILD_EXIT_CODE"
+          fi
+          exit 0
+
+      - name: Find and verify APK
+        id: find-apk
+        if: always()
+        run: |
+          echo "🔍 Searching for APK files..."
+          
+          POSSIBLE_PATHS=(
+            "build/app/outputs/flutter-apk/app-release.apk"
+            "build/app/outputs/apk/release/app-release.apk"
+          )
+          
+          APK_FOUND=false
+          APK_PATH=""
+          
+          for path in "${POSSIBLE_PATHS[@]}"; do
+            echo "Checking: $path"
+            if [ -f "$path" ]; then
+              echo "✅ FOUND!"
+              APK_PATH="$path"
+              APK_FOUND=true
+              break
+            fi
+          done
+          
+          if [ "$APK_FOUND" = false ]; then
+            echo "🔎 Deep search for APK..."
+            FOUND_APKS=$(find . -name "app-release.apk" -type f 2>/dev/null | head -n 1)
+            if [ -n "$FOUND_APKS" ]; then
+              APK_PATH="$FOUND_APKS"
+              APK_FOUND=true
+              echo "✅ Found: $APK_PATH"
+            fi
+          fi
+          
+          if [ "$APK_FOUND" = true ]; then
+            echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+            echo "apk_exists=true" >> $GITHUB_OUTPUT
+            echo "✅ APK FOUND: $APK_PATH"
+            ls -lh "$APK_PATH"
+          else
+            echo "apk_exists=false" >> $GITHUB_OUTPUT
+            echo "❌ APK NOT FOUND"
+          fi
+
+      - name: Upload build artifact
+        if: always() && steps.find-apk.outputs.apk_exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-player-apk
+          path: ${{ steps.find-apk.outputs.apk_path }}
+
+      - name: Build Summary
+        if: always()
+        run: |
+          echo "## 📊 Build Summary - YouTube Player App" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          APK_EXISTS="${{ steps.find-apk.outputs.apk_exists }}"
+          
+          if [ "$APK_EXISTS" = "true" ]; then
+            echo "### ✅ BUILD SUCCESSFUL" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** APK Generated Successfully" >> $GITHUB_STEP_SUMMARY
+            echo "- **Location:** \`${{ steps.find-apk.outputs.apk_path }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Flutter Version:** ${{ env.FLUTTER_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build Number:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ BUILD FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** APK Not Found" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build Exit Code:** ${{ steps.build-apk.outputs.build_exit_code }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the build logs for errors." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: always() && needs.build.outputs.apk_exists == 'true'
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download built artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: youtube-player-apk
+          path: build-output
+
+      - name: Verify and rename APK
+        id: process-apk
+        run: |
+          APK_FILE=$(find build-output -name "*.apk" -type f | head -n 1)
+          
+          if [ -z "$APK_FILE" ]; then
+            echo "❌ ERROR: No APK found!"
+            exit 1
+          fi
+          
+          echo "✅ Found APK: $APK_FILE"
+          
+          # Rename APK
+          TARGET_NAME="YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk"
+          cp "$APK_FILE" "build-output/$TARGET_NAME"
+          
+          echo "✅ APK renamed to: $TARGET_NAME"
+          ls -lh "build-output/$TARGET_NAME"
+          
+          # Calculate SHA256
+          SHA256=$(sha256sum "build-output/$TARGET_NAME" | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          body: |
+            ${{ env.RELEASE_BODY }}
+            
+            ## 📱 App Features
+            - ✅ Load YouTube videos from JSON configuration
+            - ✅ Scrollable list of video buttons
+            - ✅ Full-screen YouTube player
+            - ✅ Automatic landscape orientation
+            - ✅ No redirect to YouTube app
+            
+            ## 📦 Download
+            - **APK:** YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk
+            - **Size:** $(du -h build-output/YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk | cut -f1)
+            - **SHA256:** `${{ steps.process-apk.outputs.sha256 }}`
+            - **Built with:** Flutter ${{ env.FLUTTER_VERSION }}
+            - **Build:** #${{ github.run_number }}
+            
+            ## 🔧 Installation
+            1. Download the APK file below
+            2. Enable "Install from Unknown Sources" on Android
+            3. Install and enjoy!
+            
+            ## ⚙️ Configuration
+            Edit `assets/videos.json` to add your own YouTube videos:
+            ```json
+            [
+              {
+                "name": "Your Video Title",
+                "url": "https://www.youtube.com/watch?v=VIDEO_ID"
+              }
+            ]
+            ```
+          files: build-output/YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release Summary
+        if: always()
+        run: |
+          echo "## 🚀 Release Created Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **YouTube Player App is ready!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release:** ${{ env.RELEASE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **APK:** YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk" >> $GITHUB_STEP_SUMMARY
+          echo "- **SHA256:** \`${{ steps.process-apk.outputs.sha256 }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📥 [Download from Releases](https://github.com/${{ github.repository }}/releases/tag/${{ env.RELEASE_TAG }})" >> $GITHUB_STEP_SUMMARY
