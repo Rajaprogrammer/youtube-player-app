@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../models/video_model.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -26,15 +26,17 @@ class _VideoScreenState extends State<VideoScreen> {
     ]);
 
     // Extract video ID from URL
-    final videoId = YoutubePlayerController.convertUrlToId(widget.video.url) ?? '';
+    final videoId = YoutubePlayer.convertUrlToId(widget.video.url) ?? '';
     
     _controller = YoutubePlayerController(
-      params: const YoutubePlayerParams(
-        showControls: true,
-        showFullscreenButton: true,
+      initialVideoId: videoId,
+      flags: const YoutubePlayerFlags(
         autoPlay: true,
+        mute: false,
+        enableCaption: true,
+        captionLanguage: 'en',
       ),
-    )..loadVideoById(videoId: videoId);
+    );
   }
 
   @override
@@ -44,45 +46,56 @@ class _VideoScreenState extends State<VideoScreen> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    _controller.close();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: SafeArea(
-        child: YoutubePlayerScaffold(
-          controller: _controller,
-          builder: (context, player) {
-            return Column(
-              children: [
-                Expanded(
-                  child: player,
+        child: Column(
+          children: [
+            Expanded(
+              child: YoutubePlayer(
+                controller: _controller,
+                showVideoProgressIndicator: true,
+                progressIndicatorColor: Colors.red,
+                progressColors: const ProgressBarColors(
+                  playedColor: Colors.red,
+                  handleColor: Colors.red,
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Expanded(
-                        child: Text(
-                          widget.video.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                onReady: () {
+                  print('Player is ready.');
+                },
+              ),
+            ),
+            Container(
+              color: Colors.black,
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                ),
-              ],
-            );
-          },
+                  Expanded(
+                    child: Text(
+                      widget.video.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
