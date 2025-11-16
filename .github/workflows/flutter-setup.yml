@@ -1,7 +1,7 @@
 name: Create Flutter Project
 
 on:
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
   push:
     branches: [ main, master ]
 
@@ -24,9 +24,16 @@ jobs:
         cp -r youtube_player_app/* .
         rm -rf youtube_player_app
         
+    - name: Create Directory Structure
+      run: |
+        mkdir -p lib/models
+        mkdir -p lib/screens
+        mkdir -p lib/services
+        mkdir -p assets
+        
     - name: Update pubspec.yaml
       run: |
-        cat > pubspec.yaml << 'EOF'
+        cat << 'EOF' > pubspec.yaml
 name: youtube_player_app
 description: A YouTube video player app with JSON configuration
 
@@ -54,16 +61,9 @@ flutter:
     - assets/videos.json
 EOF
 
-    - name: Create Directory Structure
-      run: |
-        mkdir -p lib/models
-        mkdir -p lib/screens
-        mkdir -p lib/services
-        mkdir -p assets
-        
     - name: Create Main Dart File
       run: |
-        cat > lib/main.dart << 'EOF'
+        cat << 'EOF' > lib/main.dart
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 
@@ -91,7 +91,7 @@ EOF
 
     - name: Create Video Model
       run: |
-        cat > lib/models/video_model.dart << 'EOF'
+        cat << 'EOF' > lib/models/video_model.dart
 class Video {
   final String name;
   final String url;
@@ -112,7 +112,7 @@ EOF
 
     - name: Create JSON Loader Service
       run: |
-        cat > lib/services/json_loader.dart << 'EOF'
+        cat << 'EOF' > lib/services/json_loader.dart
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../models/video_model.dart';
@@ -125,7 +125,7 @@ class JsonLoader {
       
       return jsonList.map((json) => Video.fromJson(json)).toList();
     } catch (e) {
-      print('Error loading JSON: $e');
+      print('Error loading JSON: \$e');
       return [];
     }
   }
@@ -134,7 +134,7 @@ EOF
 
     - name: Create Home Screen
       run: |
-        cat > lib/screens/home_screen.dart << 'EOF'
+        cat << 'EOF' > lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import '../models/video_model.dart';
 import '../services/json_loader.dart';
@@ -208,7 +208,7 @@ EOF
 
     - name: Create Video Screen
       run: |
-        cat > lib/screens/video_screen.dart << 'EOF'
+        cat << 'EOF' > lib/screens/video_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -303,7 +303,7 @@ EOF
 
     - name: Create JSON Data File
       run: |
-        cat > assets/videos.json << 'EOF'
+        cat << 'EOF' > assets/videos.json
 [
   {
     "name": "Flutter Tutorial for Beginners",
