@@ -46,7 +46,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests
-        run: flutter analyz
+        run: flutter analyze
 
       - name: Build release APK
         id: build-apk
