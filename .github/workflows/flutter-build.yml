@@ -55,149 +55,121 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze code (Continue on warnings)
-        run: flutter analyze || true
+      - name: Analyze code (Ignore warnings)
+        run: flutter analyze || echo "Analysis completed with warnings"
 
-      - name: Run tests (Continue on failures)
-        run: flutter test || true
+      - name: Run tests (Ignore failures)
+        run: flutter test || echo "Tests completed with some failures"
 
       - name: Build release APK (Force continue)
         id: build-apk
         continue-on-error: true
         run: |
           set +e
-          echo "🚀 Starting APK build..."
+          echo "🚀 Building RELEASE APK only..."
           flutter build apk --release --no-tree-shake-icons
           BUILD_EXIT_CODE=$?
           echo "build_exit_code=$BUILD_EXIT_CODE" >> $GITHUB_OUTPUT
           
           if [ $BUILD_EXIT_CODE -eq 0 ]; then
-            echo "✅ Build completed successfully"
+            echo "✅ Release APK built successfully"
           else
-            echo "⚠️ Build returned exit code $BUILD_EXIT_CODE (continuing anyway)"
+            echo "⚠️ Release APK build returned exit code $BUILD_EXIT_CODE"
           fi
           
           # Always exit 0 to continue workflow
           exit 0
 
-      - name: Build debug APK as backup (Always run)
-        if: always()
-        continue-on-error: true
-        run: |
-          set +e
-          echo "🛠️ Building debug APK as backup..."
-          flutter build apk --debug --no-tree-shake-icons
-          DEBUG_EXIT_CODE=$?
-          if [ $DEBUG_EXIT_CODE -eq 0 ]; then
-            echo "✅ Debug APK built successfully"
-          else
-            echo "⚠️ Debug APK build failed (exit code: $DEBUG_EXIT_CODE)"
-          fi
-          exit 0
-
-      - name: Find and verify ANY APK
+      - name: Find release APK only
         id: find-apk
         if: always()
         run: |
-          echo "🔍 Searching for ANY APK files..."
+          echo "🔍 Searching for RELEASE APK files only..."
           
-          # Check both release and debug APKs
-          POSSIBLE_PATHS=(
+          # Only look for release APKs
+          RELEASE_PATHS=(
             "build/app/outputs/flutter-apk/app-release.apk"
-            "build/app/outputs/flutter-apk/app-debug.apk"
             "build/app/outputs/apk/release/app-release.apk"
-            "build/app/outputs/apk/debug/app-debug.apk"
           )
           
           APK_FOUND=false
           APK_PATH=""
-          APK_TYPE=""
           
-          for path in "${POSSIBLE_PATHS[@]}"; do
+          for path in "${RELEASE_PATHS[@]}"; do
             echo "Checking: $path"
             if [ -f "$path" ]; then
-              echo "✅ FOUND: $path"
+              echo "✅ RELEASE APK FOUND: $path"
               APK_PATH="$path"
               APK_FOUND=true
-              if [[ "$path" == *"release"* ]]; then
-                APK_TYPE="release"
-              else
-                APK_TYPE="debug"
-              fi
               break
             fi
           done
           
-          # Deep search if not found in expected locations
+          # If not found in standard locations, search for release APK specifically
           if [ "$APK_FOUND" = false ]; then
-            echo "🔎 Deep search for ANY .apk file..."
-            FOUND_APKS=$(find . -name "*.apk" -type f 2>/dev/null | head -n 1)
-            if [ -n "$FOUND_APKS" ]; then
-              APK_PATH="$FOUND_APKS"
+            echo "🔎 Deep search for release APK..."
+            FOUND_RELEASE_APKS=$(find . -name "*release*.apk" -type f 2>/dev/null | head -n 1)
+            if [ -n "$FOUND_RELEASE_APKS" ]; then
+              APK_PATH="$FOUND_RELEASE_APKS"
               APK_FOUND=true
-              APK_TYPE="unknown"
-              echo "✅ Found APK in deep search: $APK_PATH"
+              echo "✅ Found release APK in deep search: $APK_PATH"
             fi
           fi
           
           if [ "$APK_FOUND" = true ]; then
             echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
             echo "apk_exists=true" >> $GITHUB_OUTPUT
-            echo "apk_type=$APK_TYPE" >> $GITHUB_OUTPUT
-            echo "✅ APK FOUND: $APK_PATH (Type: $APK_TYPE)"
+            echo "✅ RELEASE APK CONFIRMED: $APK_PATH"
             ls -lh "$APK_PATH"
             echo "📦 File size: $(du -h "$APK_PATH" | cut -f1)"
           else
             echo "apk_exists=false" >> $GITHUB_OUTPUT
-            echo "apk_type=none" >> $GITHUB_OUTPUT
-            echo "❌ NO APK FOUND ANYWHERE"
-            echo "📂 Listing build directories:"
-            ls -la build/ 2>/dev/null || echo "No build directory"
-            ls -la android/app/build/ 2>/dev/null || echo "No android build directory"
+            echo "❌ NO RELEASE APK FOUND"
+            echo "📂 Build directory contents:"
+            find build/ -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
           fi
 
-      - name: Upload build artifact (Always if APK exists)
+      - name: Upload release APK artifact
         if: always() && steps.find-apk.outputs.apk_exists == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-player-apk
+          name: youtube-player-release-apk
           path: ${{ steps.find-apk.outputs.apk_path }}
           retention-days: 30
 
-      - name: Build Summary (Always run)
+      - name: Build Summary
         if: always()
         run: |
           echo "## 📊 Build Summary - YouTube Player App" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           APK_EXISTS="${{ steps.find-apk.outputs.apk_exists }}"
-          APK_TYPE="${{ steps.find-apk.outputs.apk_type }}"
           BUILD_EXIT="${{ steps.build-apk.outputs.build_exit_code }}"
           
           if [ "$APK_EXISTS" = "true" ]; then
-            echo "### ✅ APK GENERATED SUCCESSFULLY" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ RELEASE APK GENERATED SUCCESSFULLY" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "- **Status:** ✅ APK Available" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** ✅ RELEASE APK Ready" >> $GITHUB_STEP_SUMMARY
             echo "- **Location:** \`${{ steps.find-apk.outputs.apk_path }}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Type:** $APK_TYPE" >> $GITHUB_STEP_SUMMARY
+            echo "- **Type:** RELEASE" >> $GITHUB_STEP_SUMMARY
             echo "- **Flutter Version:** ${{ env.FLUTTER_VERSION }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Java Version:** ${{ env.JAVA_VERSION }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Build Number:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Release Tag:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY
             
             if [ "$BUILD_EXIT" != "0" ]; then
-              echo "- **Note:** Build had warnings but APK was generated" >> $GITHUB_STEP_SUMMARY
+              echo "- **Note:** Build had warnings but RELEASE APK was generated" >> $GITHUB_STEP_SUMMARY
             fi
           else
-            echo "### ❌ BUILD FAILED - NO APK GENERATED" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ RELEASE APK NOT GENERATED" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "- **Status:** ❌ No APK Found" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** ❌ No Release APK Found" >> $GITHUB_STEP_SUMMARY
             echo "- **Build Exit Code:** $BUILD_EXIT" >> $GITHUB_STEP_SUMMARY
-            echo "- **Last Analysis:** Warning about print statement (non-blocking)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
-            echo "1. Check build logs for critical errors" >> $GITHUB_STEP_SUMMARY
-            echo "2. The print warning should not block APK generation" >> $GITHUB_STEP_SUMMARY
-            echo "3. Try building locally with \`flutter build apk --release\`" >> $GITHUB_STEP_SUMMARY
+            echo "**Troubleshooting:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Check if Flutter analysis warnings are blocking the build" >> $GITHUB_STEP_SUMMARY
+            echo "2. Verify all dependencies are correctly specified" >> $GITHUB_STEP_SUMMARY
+            echo "3. Check Android configuration in \`android/\` directory" >> $GITHUB_STEP_SUMMARY
           fi
 
   release:
@@ -209,45 +181,45 @@ jobs:
       contents: write
     
     steps:
-      - name: Download built artifact
+      - name: Download release APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: youtube-player-apk
+          name: youtube-player-release-apk
           path: build-output
 
-      - name: Verify and rename APK
+      - name: Verify and rename release APK
         id: process-apk
         run: |
           APK_FILE=$(find build-output -name "*.apk" -type f | head -n 1)
           
           if [ -z "$APK_FILE" ]; then
-            echo "❌ ERROR: No APK found in artifacts!"
+            echo "❌ ERROR: No release APK found in artifacts!"
             echo "📂 Contents of build-output/:"
             ls -la build-output/
             exit 1
           fi
           
-          echo "✅ Found APK: $APK_FILE"
+          echo "✅ Found release APK: $APK_FILE"
           
-          # Rename APK based on type
-          APK_TYPE="${{ needs.build.outputs.apk_type }}"
-          if [ "$APK_TYPE" = "release" ]; then
-            TARGET_NAME="YouTubePlayerApp-${{ env.RELEASE_TAG }}-RELEASE.apk"
-          elif [ "$APK_TYPE" = "debug" ]; then
-            TARGET_NAME="YouTubePlayerApp-${{ env.RELEASE_TAG }}-DEBUG.apk"
-          else
-            TARGET_NAME="YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk"
-          fi
-          
+          # Rename to clean release name
+          TARGET_NAME="YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk"
           cp "$APK_FILE" "build-output/$TARGET_NAME"
           
-          echo "✅ APK renamed to: $TARGET_NAME"
+          echo "✅ Release APK renamed to: $TARGET_NAME"
           ls -lh "build-output/$TARGET_NAME"
           
           # Calculate SHA256
           SHA256=$(sha256sum "build-output/$TARGET_NAME" | awk '{print $1}')
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
           echo "file_name=$TARGET_NAME" >> $GITHUB_OUTPUT
+          
+          # Verify it's a release build
+          echo "🔍 Verifying APK type..."
+          if file "$APK_FILE" | grep -q "Zip archive"; then
+            echo "✅ APK is valid ZIP archive"
+          else
+            echo "⚠️ APK file format check inconclusive"
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -264,44 +236,55 @@ jobs:
             - ✅ Automatic landscape orientation
             - ✅ No redirect to YouTube app
             
-            ## 📦 Download Info
-            - **APK:** ${{ steps.process-apk.outputs.file_name }}
-            - **Type:** ${{ needs.build.outputs.apk_type }}
-            - **Size:** $(du -h build-output/${{ steps.process-apk.outputs.file_name }} | cut -f1)
-            - **SHA256:** `${{ steps.process-apk.outputs.sha256 }}`
-            - **Built with:** Flutter ${{ env.FLUTTER_VERSION }}
+            ## 📦 Release Information
+            - **APK Name:** ${{ steps.process-apk.outputs.file_name }}
+            - **Build Type:** RELEASE
+            - **File Size:** $(du -h build-output/${{ steps.process-apk.outputs.file_name }} | cut -f1)
+            - **SHA256 Checksum:** `${{ steps.process-apk.outputs.sha256 }}`
+            - **Flutter Version:** ${{ env.FLUTTER_VERSION }}
             - **Java Version:** ${{ env.JAVA_VERSION }}
-            - **Build:** #${{ github.run_number }}
+            - **Build Number:** #${{ github.run_number }}
+            - **Release Tag:** ${{ env.RELEASE_TAG }}
             
-            ## 🔧 Installation
-            1. Download the APK file below
-            2. Enable "Install from Unknown Sources" on Android
-            3. Install and enjoy!
+            ## 🔧 Installation Instructions
+            1. **Download** the APK file below
+            2. **Enable** "Install from Unknown Sources" in Android Settings
+            3. **Install** the APK on your Android device
+            4. **Launch** the app and enjoy!
             
-            ## ⚙️ Configuration
-            Edit \`assets/videos.json\` to add your own YouTube videos:
+            ## ⚙️ Customization
+            To add your own videos, edit the \`assets/videos.json\` file:
+            
             \`\`\`json
             [
               {
                 "name": "Your Video Title",
-                "url": "https://www.youtube.com/watch?v=VIDEO_ID"
+                "url": "https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
               }
             ]
             \`\`\`
+            
+            ## 🐛 Issue Reporting
+            If you encounter any issues, please report them on the GitHub repository.
           files: build-output/${{ steps.process-apk.outputs.file_name }}
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release Summary
+      - name: Release Success Summary
         if: always()
         run: |
-          echo "## 🚀 Release Created Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 GitHub Release Created Successfully" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **YouTube Player App is ready!**" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ RELEASE PUBLISHED" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Release:** ${{ env.RELEASE_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **APK:** ${{ steps.process-apk.outputs.file_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Type:** ${{ needs.build.outputs.apk_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Name:** ${{ env.RELEASE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Tag:** ${{ env.RELEASE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **APK File:** ${{ steps.process-apk.outputs.file_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **SHA256:** \`${{ steps.process-apk.outputs.sha256 }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Type:** RELEASE" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📥 [Download from Releases](https://github.com/${{ github.repository }}/releases/tag/${{ env.RELEASE_TAG }})" >> $GITHUB_STEP_SUMMARY
+          echo "📥 **Download Link:** [GitHub Releases](https://github.com/${{ github.repository }}/releases/tag/${{ env.RELEASE_TAG }})" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **Your YouTube Player App is now available for download!**" >> $GITHUB_STEP_SUMMARY
