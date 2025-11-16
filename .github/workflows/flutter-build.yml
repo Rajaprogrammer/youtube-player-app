@@ -8,7 +8,7 @@ on:
 
 env:
   FLUTTER_VERSION: '3.19.5'
-  JAVA_VERSION: '20'
+  JAVA_VERSION: '17'  # Changed from 20 to 17 for compatibility
   RELEASE_NAME: 'YouTube Player App v1.0.0'
   RELEASE_TAG: 'v1.0.0'
   RELEASE_BODY: "YouTube Player App - Play videos from JSON configuration"
@@ -39,14 +39,27 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Fix Gradle Java Compatibility
+        run: |
+          # Update Gradle wrapper to compatible version
+          sed -i 's/gradle-7.5-all.zip/gradle-7.6.4-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties
+          
+          # Update Android Gradle Plugin version if needed
+          if grep -q "com.android.tools.build:gradle:7.3" android/build.gradle; then
+            sed -i 's/com.android.tools.build:gradle:7.3/com.android.tools.build:gradle:7.4.2/g' android/build.gradle
+          fi
+          
+          echo "Updated Gradle wrapper properties:"
+          cat android/gradle/wrapper/gradle-wrapper.properties
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Analyze code
-        run: flutter pub get
+        run: flutter analyze
 
       - name: Run tests
-        run: flutter pub get
+        run: flutter test
 
       - name: Build release APK
         id: build-apk
@@ -129,6 +142,7 @@ jobs:
             echo "- **Status:** APK Generated Successfully" >> $GITHUB_STEP_SUMMARY
             echo "- **Location:** \`${{ steps.find-apk.outputs.apk_path }}\`" >> $GITHUB_STEP_SUMMARY
             echo "- **Flutter Version:** ${{ env.FLUTTER_VERSION }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Java Version:** ${{ env.JAVA_VERSION }}" >> $GITHUB_STEP_SUMMARY
             echo "- **Build Number:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "### ❌ BUILD FAILED" >> $GITHUB_STEP_SUMMARY
@@ -197,6 +211,7 @@ jobs:
             - **Size:** $(du -h build-output/YouTubePlayerApp-${{ env.RELEASE_TAG }}.apk | cut -f1)
             - **SHA256:** `${{ steps.process-apk.outputs.sha256 }}`
             - **Built with:** Flutter ${{ env.FLUTTER_VERSION }}
+            - **Java Version:** ${{ env.JAVA_VERSION }}
             - **Build:** #${{ github.run_number }}
             
             ## 🔧 Installation
