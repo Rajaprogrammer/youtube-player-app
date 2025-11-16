@@ -14,17 +14,26 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
-      
-    - name: Create Flutter Project
-      run: flutter create --org com.example youtube_player_app .
-      
-    - name: Commit Project
+      with:
+        flutter-version: '3.19.5'
+        
+    - name: Clean directory and create Flutter project
+      run: |
+        # Remove everything except .git and .github
+        find . -maxdepth 1 ! -name '.' ! -name '.git' ! -name '.github' -exec rm -rf {} + 2>/dev/null || true
+        
+        # Create Flutter project in current directory
+        flutter create --org com.example . --project-name youtube_player_app
+        
+    - name: Commit initial project
       run: |
         git config user.email "github-actions@users.noreply.github.com"
         git config user.name "github-actions"
         git add .
-        git commit -m "Create Flutter project" || exit 0
+        git commit -m "Create base Flutter project" || exit 0
         git push
