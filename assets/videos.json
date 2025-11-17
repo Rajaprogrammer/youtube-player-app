@@ -1,14 +1,18 @@
 [
   {
     "name": "Flutter Tutorial for Beginners",
-    "url": "https://www.youtube.com/watch?v=1gDhl4leEzA"
+    "url": "https://www.youtube.com/embed/1gDhl4leEzA"
   },
   {
-    "name": "Dart Programming Language",
-    "url": "https://www.youtube.com/watch?v=Ej_Pcr4uC2Q"
+    "name": "Dart Programming Tutorial", 
+    "url": "https://www.youtube.com/embed/Ej_Pcr4uC2Q"
   },
   {
     "name": "Flutter UI Design",
-    "url": "https://www.youtube.com/watch?v=FC7C8zJY5CM"
+    "url": "https://www.youtube.com/embed/FC7C8zJY5CM"
+  },
+  {
+    "name": "State Management in Flutter",
+    "url": "https://www.youtube.com/embed/W1pNjxmNHNQ"
   }
 ]
