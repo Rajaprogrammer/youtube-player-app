@@ -76,7 +76,6 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Header
                     Row(
                       children: [
                         Container(
@@ -120,7 +119,7 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                                 ),
                               ),
                               Text(
-                                'Enter the YouTube video details',
+                                'Enter YouTube video details',
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color: AppTheme.textSecondary,
@@ -138,7 +137,7 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                               color: Colors.white.withOpacity(0.05),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.close_rounded,
                               color: AppTheme.textSecondary,
                               size: 20,
@@ -148,14 +147,12 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                       ],
                     ),
                     const SizedBox(height: 28),
-                    // Title field
                     _buildLabel('Video Title', Icons.title_rounded),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _titleController,
                       style: GoogleFonts.poppins(
-                        color: AppTheme.textPrimary,
-                      ),
+                          color: AppTheme.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g., Flutter Tutorial #1',
                       ),
@@ -163,15 +160,12 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                           v?.isEmpty == true ? 'Required' : null,
                     ),
                     const SizedBox(height: 20),
-                    // URL field
-                    _buildLabel(
-                        'YouTube URL', Icons.link_rounded),
+                    _buildLabel('YouTube URL', Icons.link_rounded),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _urlController,
                       style: GoogleFonts.poppins(
-                        color: AppTheme.textPrimary,
-                      ),
+                          color: AppTheme.textPrimary),
                       decoration: const InputDecoration(
                         hintText:
                             'https://www.youtube.com/watch?v=...',
@@ -186,53 +180,43 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                       },
                     ),
                     const SizedBox(height: 20),
-                    // Category field
-                    _buildLabel(
-                        'Category', Icons.category_rounded),
+                    _buildLabel('Category', Icons.category_rounded),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _categoryController,
                       style: GoogleFonts.poppins(
-                        color: AppTheme.textPrimary,
-                      ),
+                          color: AppTheme.textPrimary),
                       decoration: const InputDecoration(
                         hintText: 'e.g., Flutter, Tutorial',
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Description field
-                    _buildLabel('Description',
-                        Icons.description_rounded),
+                    _buildLabel(
+                        'Description', Icons.description_rounded),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _descController,
                       style: GoogleFonts.poppins(
-                        color: AppTheme.textPrimary,
-                      ),
+                          color: AppTheme.textPrimary),
                       maxLines: 3,
                       decoration: const InputDecoration(
                         hintText: 'Brief description (optional)',
                       ),
                     ),
                     const SizedBox(height: 32),
-                    // Buttons
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () =>
-                                Navigator.pop(context),
+                            onPressed: () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor:
-                                  AppTheme.textSecondary,
+                              foregroundColor: AppTheme.textSecondary,
                               side: BorderSide(
-                                color: Colors.white
-                                    .withOpacity(0.1),
+                                color:
+                                    Colors.white.withOpacity(0.1),
                               ),
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                vertical: 16,
-                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(16),
@@ -241,8 +225,7 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                             child: Text(
                               'Cancel',
                               style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -264,42 +247,34 @@ class _AddVideoDialogState extends State<AddVideoDialog>
                                   color: AppTheme.primaryColor
                                       .withOpacity(0.4),
                                   blurRadius: 12,
-                                  offset:
-                                      const Offset(0, 4),
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
                             child: ElevatedButton(
                               onPressed: _submit,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Colors.transparent,
-                                shadowColor:
-                                    Colors.transparent,
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
                                 padding:
                                     const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
+                                        vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius:
-                                      BorderRadius.circular(
-                                          16),
+                                      BorderRadius.circular(16),
                                 ),
                               ),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
-                                    Icons.add_rounded,
-                                    size: 20,
-                                  ),
+                                  const Icon(Icons.add_rounded,
+                                      size: 20),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Add Video',
                                     style: GoogleFonts.poppins(
-                                      fontWeight:
-                                          FontWeight.w600,
+                                      fontWeight: FontWeight.w600,
                                       fontSize: 15,
                                     ),
                                   ),

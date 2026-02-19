@@ -11,8 +11,7 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -53,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo
             FadeInDown(
               duration: const Duration(milliseconds: 800),
               child: Container(
@@ -86,7 +84,6 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
             const SizedBox(height: 32),
-            // Title
             FadeInUp(
               duration: const Duration(milliseconds: 800),
               delay: const Duration(milliseconds: 300),

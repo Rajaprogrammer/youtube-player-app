@@ -1,32 +1,38 @@
 # 🎬 YouTube Viewer
 
-A beautiful Flutter app for viewing YouTube videos with a sleek dark UI.
+A beautiful Flutter Android app for viewing YouTube videos with a sleek dark UI.
+
+![Flutter](https://img.shields.io/badge/Flutter-3.24-blue?logo=flutter)
+![Android](https://img.shields.io/badge/Platform-Android-green?logo=android)
 
 ## ✨ Features
 
-- 🎥 **Embedded YouTube Player** - Watch videos directly in the app
-- 📁 **JSON Import/Export** - Manage your video collection via JSON files
-- ➕ **Add Videos** - Add new YouTube videos with title, URL, category & description
-- 🗂️ **Categories** - Filter videos by category
-- 🗑️ **Delete Videos** - Remove videos from your collection
-- 🎨 **Custom Theming** - Set primary and accent colors via JSON
-- 📱 **Beautiful UI** - Glassmorphism, animations, and gradient effects
-- 🌙 **Dark Theme** - Easy on the eyes
+- 🎥 **Embedded YouTube Player** — Watch videos directly in the app with fullscreen support
+- 📁 **JSON Import** — Load your video collection from a JSON file
+- 📤 **JSON Export** — Share/download your current video collection as JSON
+- ➕ **Add Videos** — Add new YouTube videos with title, URL, category & description
+- 🗂️ **Categories** — Filter videos by category with animated chips
+- 🗑️ **Delete Videos** — Remove videos from your collection
+- 🎨 **Custom Theming** — Set primary and accent colors via JSON config
+- 🌙 **Dark Theme** — Beautiful dark glassmorphism UI
+- ✨ **Animations** — Smooth transitions, fade-ins, and scale effects
 
 ## 📋 JSON Format
 
+Export the existing JSON to see the format, or create one like this:
+
 ```json
 {
-  "app_title": "My YouTube Viewer",
+  "app_title": "My Tutorials",
   "theme_color": "#6C63FF",
   "accent_color": "#FF6584",
   "videos": [
     {
       "id": "1",
-      "title": "Video Title",
+      "title": "Flutter Tutorial",
       "url": "https://www.youtube.com/watch?v=VIDEO_ID",
-      "category": "Category Name",
-      "description": "Video description"
+      "category": "Flutter",
+      "description": "Learn Flutter basics"
     }
   ]
 }
@@ -35,23 +41,14 @@ A beautiful Flutter app for viewing YouTube videos with a sleek dark UI.
 ## 🚀 Getting Started
 
 ```bash
-cd youtube_viewer_app
 flutter pub get
 flutter run
 ```
 
-## 📱 Supported Platforms
+## 📱 Build APK
 
-- Android
-- iOS
-- Web
+```bash
+flutter build apk --release
+```
 
-## 🛠️ Built With
-
-- Flutter 3.24+
-- youtube_player_flutter
-- file_picker
-- google_fonts
-- animate_do
-- cached_network_image
-- shimmer
+The APK will be at `build/app/outputs/flutter-apk/app-release.apk`

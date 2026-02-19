@@ -12,20 +12,17 @@ class DataService {
 
   static Future<AppData> loadData() async {
     try {
-      if (!kIsWeb) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/$_fileName');
-        if (await file.exists()) {
-          final content = await file.readAsString();
-          final json = jsonDecode(content) as Map<String, dynamic>;
-          return AppData.fromJson(json);
-        }
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$_fileName');
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final json = jsonDecode(content) as Map<String, dynamic>;
+        return AppData.fromJson(json);
       }
     } catch (e) {
       debugPrint('Error loading saved data: $e');
     }
 
-    // Load default from assets
     try {
       final content =
           await rootBundle.loadString('assets/default_videos.json');
@@ -39,11 +36,9 @@ class DataService {
 
   static Future<void> saveData(AppData data) async {
     try {
-      if (!kIsWeb) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/$_fileName');
-        await file.writeAsString(data.toJsonString());
-      }
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$_fileName');
+      await file.writeAsString(data.toJsonString());
     } catch (e) {
       debugPrint('Error saving data: $e');
     }
@@ -74,18 +69,15 @@ class DataService {
   static Future<void> exportJson(AppData data) async {
     try {
       final jsonString = data.toJsonString();
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/youtube_viewer_export.json');
+      await file.writeAsString(jsonString);
 
-      if (!kIsWeb) {
-        final dir = await getApplicationDocumentsDirectory();
-        final file = File('${dir.path}/youtube_viewer_export.json');
-        await file.writeAsString(jsonString);
-
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'YouTube Viewer Data',
-          text: 'YouTube Viewer configuration file',
-        );
-      }
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'YouTube Viewer Data',
+        text: 'YouTube Viewer configuration file',
+      );
     } catch (e) {
       debugPrint('Error exporting JSON: $e');
       rethrow;

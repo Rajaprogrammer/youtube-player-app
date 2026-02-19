@@ -6,7 +6,6 @@ import '../services/data_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/video_card.dart';
 import '../widgets/add_video_dialog.dart';
-import '../widgets/glass_container.dart';
 import 'player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,22 +20,16 @@ class _HomeScreenState extends State<HomeScreen>
   AppData? _appData;
   bool _isLoading = true;
   String _selectedCategory = 'All';
-  late AnimationController _fabController;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _fabController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
     _loadData();
   }
 
   @override
   void dispose() {
-    _fabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -49,7 +42,6 @@ class _HomeScreenState extends State<HomeScreen>
       _appData = data;
       _isLoading = false;
     });
-    _fabController.forward();
   }
 
   List<String> get _categories {
@@ -81,14 +73,13 @@ class _HomeScreenState extends State<HomeScreen>
           _selectedCategory = 'All';
         });
         if (mounted) {
-          _showSnackBar('Data imported successfully!',
-              AppTheme.successGreen);
+          _showSnackBar(
+              'Data imported successfully!', AppTheme.successGreen);
         }
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar(
-            'Failed to import: ${e.toString()}', AppTheme.errorRed);
+        _showSnackBar('Failed to import: $e', AppTheme.errorRed);
       }
     }
   }
@@ -103,8 +94,7 @@ class _HomeScreenState extends State<HomeScreen>
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar(
-            'Failed to export: ${e.toString()}', AppTheme.errorRed);
+        _showSnackBar('Failed to export: $e', AppTheme.errorRed);
       }
     }
   }
@@ -126,8 +116,7 @@ class _HomeScreenState extends State<HomeScreen>
               child: Text(
                 message,
                 style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w500,
-                ),
+                    fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -155,7 +144,8 @@ class _HomeScreenState extends State<HomeScreen>
       );
       await DataService.saveData(updatedData);
       setState(() => _appData = updatedData);
-      _showSnackBar('Video added successfully!', AppTheme.successGreen);
+      _showSnackBar(
+          'Video added successfully!', AppTheme.successGreen);
     }
   }
 
@@ -188,9 +178,8 @@ class _HomeScreenState extends State<HomeScreen>
             ),
             child: Text(
               'Delete',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-              ),
+              style:
+                  GoogleFonts.poppins(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -198,9 +187,8 @@ class _HomeScreenState extends State<HomeScreen>
     );
 
     if (confirm == true && _appData != null) {
-      final updatedVideos = _appData!.videos
-          .where((v) => v.id != video.id)
-          .toList();
+      final updatedVideos =
+          _appData!.videos.where((v) => v.id != video.id).toList();
       final updatedData =
           _appData!.copyWith(videos: updatedVideos);
       await DataService.saveData(updatedData);
@@ -314,8 +302,7 @@ class _HomeScreenState extends State<HomeScreen>
                       color: Colors.white.withOpacity(0.1),
                     ),
                     padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                    ),
+                        vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -323,8 +310,7 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Text(
                     'Close',
                     style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                    ),
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -356,9 +342,7 @@ class _HomeScreenState extends State<HomeScreen>
             decoration: BoxDecoration(
               color: color.withOpacity(0.08),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: color.withOpacity(0.15),
-              ),
+              border: Border.all(color: color.withOpacity(0.15)),
             ),
             child: Row(
               children: [
@@ -450,17 +434,14 @@ class _HomeScreenState extends State<HomeScreen>
         controller: _scrollController,
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // App bar
           SliverAppBar(
             expandedHeight: 140,
             floating: false,
             pinned: true,
             backgroundColor: AppTheme.darkBg,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(
-                left: 20,
-                bottom: 16,
-              ),
+              titlePadding:
+                  const EdgeInsets.only(left: 20, bottom: 16),
               title: FadeInLeft(
                 duration: const Duration(milliseconds: 600),
                 child: Row(
@@ -525,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen>
                           color: Colors.white.withOpacity(0.06),
                         ),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.more_vert_rounded,
                         color: AppTheme.textPrimary,
                         size: 22,
@@ -536,90 +517,31 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ],
           ),
-          // Stats bar
           SliverToBoxAdapter(
             child: FadeInUp(
               duration: const Duration(milliseconds: 500),
               delay: const Duration(milliseconds: 200),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+                padding:
+                    const EdgeInsets.fromLTRB(20, 8, 20, 4),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            AppTheme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.primaryColor
-                              .withOpacity(0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.play_circle_rounded,
-                            size: 18,
-                            color: AppTheme.primaryColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_appData?.videos.length ?? 0} videos',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                    _buildStatChip(
+                      Icons.play_circle_rounded,
+                      '${_appData?.videos.length ?? 0} videos',
+                      AppTheme.primaryColor,
                     ),
                     const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            AppTheme.accentColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.accentColor
-                              .withOpacity(0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.category_rounded,
-                            size: 18,
-                            color: AppTheme.accentColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_categories.length - 1} categories',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.accentColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                    _buildStatChip(
+                      Icons.category_rounded,
+                      '${_categories.length - 1} categories',
+                      AppTheme.accentColor,
                     ),
                   ],
                 ),
               ),
             ),
           ),
-          // Category chips
           if (_categories.length > 1)
             SliverToBoxAdapter(
               child: FadeInUp(
@@ -639,15 +561,17 @@ class _HomeScreenState extends State<HomeScreen>
                       final isSelected =
                           cat == _selectedCategory;
                       return Padding(
-                        padding: const EdgeInsets.only(right: 10),
+                        padding:
+                            const EdgeInsets.only(right: 10),
                         child: GestureDetector(
-                          onTap: () => setState(
-                              () => _selectedCategory = cat),
+                          onTap: () => setState(() =>
+                              _selectedCategory = cat),
                           child: AnimatedContainer(
                             duration: const Duration(
                                 milliseconds: 300),
                             curve: Curves.easeOutCubic,
-                            padding: const EdgeInsets.symmetric(
+                            padding:
+                                const EdgeInsets.symmetric(
                               horizontal: 18,
                               vertical: 8,
                             ),
@@ -679,8 +603,8 @@ class _HomeScreenState extends State<HomeScreen>
                                             .primaryColor
                                             .withOpacity(0.3),
                                         blurRadius: 10,
-                                        offset: const Offset(
-                                            0, 3),
+                                        offset:
+                                            const Offset(0, 3),
                                       ),
                                     ]
                                   : null,
@@ -705,97 +629,18 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ),
-          // Video list
           if (videos.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: FadeInUp(
                 duration: const Duration(milliseconds: 600),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor
-                              .withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons
-                              .video_library_rounded,
-                          size: 48,
-                          color: AppTheme.primaryColor
-                              .withOpacity(0.5),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'No Videos Yet',
-                        style: GoogleFonts.poppins(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add a video or import a JSON file\nto get started',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: AppTheme.textSecondary,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _addVideo,
-                            icon: const Icon(
-                                Icons.add_rounded),
-                            label: const Text('Add Video'),
-                          ),
-                          const SizedBox(width: 16),
-                          OutlinedButton.icon(
-                            onPressed: _importJson,
-                            icon: const Icon(
-                              Icons
-                                  .file_download_rounded,
-                            ),
-                            label: const Text('Import'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor:
-                                  AppTheme.primaryColor,
-                              side: BorderSide(
-                                color: AppTheme.primaryColor,
-                              ),
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 14,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                child: _buildEmptyState(),
               ),
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+              padding:
+                  const EdgeInsets.fromLTRB(20, 8, 20, 100),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (ctx, i) {
@@ -809,8 +654,7 @@ class _HomeScreenState extends State<HomeScreen>
                         video: video,
                         index: i,
                         onTap: () => _openPlayer(video),
-                        onDelete: () =>
-                            _deleteVideo(video),
+                        onDelete: () => _deleteVideo(video),
                       ),
                     );
                   },
@@ -835,8 +679,8 @@ class _HomeScreenState extends State<HomeScreen>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          AppTheme.primaryColor.withOpacity(0.4),
+                      color: AppTheme.primaryColor
+                          .withOpacity(0.4),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                       spreadRadius: 2,
@@ -852,13 +696,110 @@ class _HomeScreenState extends State<HomeScreen>
                   label: Text(
                     'Add Video',
                     style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                    ),
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
             )
           : null,
+    );
+  }
+
+  Widget _buildStatChip(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.video_library_rounded,
+              size: 48,
+              color: AppTheme.primaryColor.withOpacity(0.5),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No Videos Yet',
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add a video or import a JSON file\nto get started',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _addVideo,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add Video'),
+              ),
+              const SizedBox(width: 16),
+              OutlinedButton.icon(
+                onPressed: _importJson,
+                icon: const Icon(Icons.file_download_rounded),
+                label: const Text('Import'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryColor,
+                  side: BorderSide(
+                      color: AppTheme.primaryColor),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

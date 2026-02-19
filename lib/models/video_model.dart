@@ -18,34 +18,31 @@ class VideoItem {
   String get youtubeId {
     final uri = Uri.tryParse(url);
     if (uri == null) return '';
-    
-    // Handle youtu.be short links
+
     if (uri.host.contains('youtu.be')) {
       return uri.pathSegments.isNotEmpty ? uri.pathSegments.first : '';
     }
-    
-    // Handle youtube.com links
+
     if (uri.host.contains('youtube.com')) {
-      // /watch?v=VIDEO_ID
       if (uri.queryParameters.containsKey('v')) {
         return uri.queryParameters['v'] ?? '';
       }
-      // /embed/VIDEO_ID
-      if (uri.pathSegments.contains('embed') && uri.pathSegments.length > 1) {
+      if (uri.pathSegments.contains('embed') &&
+          uri.pathSegments.length > 1) {
         final idx = uri.pathSegments.indexOf('embed');
         if (idx + 1 < uri.pathSegments.length) {
           return uri.pathSegments[idx + 1];
         }
       }
-      // /shorts/VIDEO_ID
-      if (uri.pathSegments.contains('shorts') && uri.pathSegments.length > 1) {
+      if (uri.pathSegments.contains('shorts') &&
+          uri.pathSegments.length > 1) {
         final idx = uri.pathSegments.indexOf('shorts');
         if (idx + 1 < uri.pathSegments.length) {
           return uri.pathSegments[idx + 1];
         }
       }
     }
-    
+
     return url;
   }
 
@@ -57,7 +54,8 @@ class VideoItem {
 
   factory VideoItem.fromJson(Map<String, dynamic> json) {
     return VideoItem(
-      id: json['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: json['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       title: json['title'] ?? 'Untitled',
       url: json['url'] ?? '',
       category: json['category'] ?? 'General',

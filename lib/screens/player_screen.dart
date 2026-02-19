@@ -16,7 +16,6 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   late YoutubePlayerController _ytController;
-  bool _isFullScreen = false;
 
   @override
   void initState() {
@@ -49,13 +48,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Widget build(BuildContext context) {
     return YoutubePlayerBuilder(
       onExitFullScreen: () {
-        setState(() => _isFullScreen = false);
         SystemChrome.setPreferredOrientations([
           DeviceOrientation.portraitUp,
         ]);
-      },
-      onEnterFullScreen: () {
-        setState(() => _isFullScreen = true);
       },
       player: YoutubePlayer(
         controller: _ytController,
@@ -113,7 +108,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Player
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(24),
@@ -121,17 +115,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 child: player,
               ),
               const SizedBox(height: 24),
-              // Video info
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
                       Text(
                         widget.video.title,
                         style: GoogleFonts.poppins(
@@ -142,7 +132,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // Category chip
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -157,8 +146,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   .withOpacity(0.1),
                             ],
                           ),
-                          borderRadius:
-                              BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: AppTheme.primaryColor
                                 .withOpacity(0.3),
@@ -195,8 +183,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             borderRadius:
                                 BorderRadius.circular(20),
                             border: Border.all(
-                              color: Colors.white
-                                  .withOpacity(0.05),
+                              color:
+                                  Colors.white.withOpacity(0.05),
                             ),
                           ),
                           child: Column(
@@ -216,8 +204,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 widget.video.description,
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color:
-                                      AppTheme.textSecondary,
+                                  color: AppTheme.textSecondary,
                                   height: 1.6,
                                 ),
                               ),
