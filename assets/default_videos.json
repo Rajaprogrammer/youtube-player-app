@@ -1,0 +1,28 @@
+{
+  "app_title": "My YouTube Viewer",
+  "theme_color": "#6C63FF",
+  "accent_color": "#FF6584",
+  "videos": [
+    {
+      "id": "1",
+      "title": "Flutter in 100 Seconds",
+      "url": "https://www.youtube.com/watch?v=lHn9RCpxEeY",
+      "category": "Flutter",
+      "description": "Learn Flutter basics in 100 seconds"
+    },
+    {
+      "id": "2",
+      "title": "Dart in 100 Seconds",
+      "url": "https://www.youtube.com/watch?v=NrO0CJCbYLA",
+      "category": "Dart",
+      "description": "Learn Dart programming language basics"
+    },
+    {
+      "id": "3",
+      "title": "Firebase in 100 Seconds",
+      "url": "https://www.youtube.com/watch?v=vAoB4VbhRzM",
+      "category": "Firebase",
+      "description": "Learn Firebase basics in 100 seconds"
+    }
+  ]
+}
