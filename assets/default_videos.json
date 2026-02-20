@@ -1,28 +1,28 @@
 {
-  "app_title": "My YouTube Viewer",
+  "app_title": "Stothras",
   "theme_color": "#6C63FF",
   "accent_color": "#FF6584",
   "videos": [
     {
       "id": "1",
-      "title": "Flutter in 100 Seconds",
-      "url": "https://www.youtube.com/watch?v=lHn9RCpxEeY",
-      "category": "Flutter",
-      "description": "Learn Flutter basics in 100 seconds"
+      "title": "Big Buck Bunny (Open Movie)",
+      "url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "category": "Animation",
+      "description": "Big Buck Bunny - A short open-source animated film by Blender Foundation"
     },
     {
       "id": "2",
-      "title": "Dart in 100 Seconds",
-      "url": "https://www.youtube.com/watch?v=NrO0CJCbYLA",
-      "category": "Dart",
-      "description": "Learn Dart programming language basics"
+      "title": "Sintel (Open Movie)",
+      "url": "https://www.youtube.com/watch?v=eRsGyueVLvQ",
+      "category": "Animation",
+      "description": "Sintel - An open-source animated short film by Blender Foundation"
     },
     {
       "id": "3",
-      "title": "Firebase in 100 Seconds",
-      "url": "https://www.youtube.com/watch?v=vAoB4VbhRzM",
-      "category": "Firebase",
-      "description": "Learn Firebase basics in 100 seconds"
+      "title": "Tears of Steel",
+      "url": "https://www.youtube.com/watch?v=R6MlUcmOul8",
+      "category": "Sci-Fi",
+      "description": "Tears of Steel - Open source sci-fi short film by Blender"
     }
   ]
 }

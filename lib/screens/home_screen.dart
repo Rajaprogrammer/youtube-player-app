@@ -199,29 +199,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _openPlayer(VideoItem video) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => PlayerScreen(video: video),
-        transitionsBuilder: (_, anim, __, child) {
-          return FadeTransition(
-            opacity: anim,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.05),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: anim,
-                curve: Curves.easeOutCubic,
-              )),
-              child: child,
-            ),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 400),
-      ),
-    );
-  }
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PlayerScreen(video: video),
+    ),
+  ).then((_) {
+    // Refresh state when returning from player
+    if (mounted) {
+      setState(() {});
+    }
+  });
+}
 
   void _showOptionsMenu() {
     showModalBottomSheet(
