@@ -24,79 +24,37 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          gradle-version: 8.2
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
 
-      - name: Check for gradlew
-        id: check_gradlew
-        run: |
-          if [ -f "gradlew" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            chmod +x gradlew
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ gradlew not found, will use gradle command"
-          fi
+      - name: Get Flutter dependencies
+        run: flutter pub get
 
       - name: Build Release APK
-        run: |
-          if [ "${{ steps.check_gradlew.outputs.exists }}" == "true" ]; then
-            ./gradlew assembleRelease
-          else
-            gradle assembleRelease
-          fi
+        run: flutter build apk --release
 
       - name: Find APK
         id: find_apk
         run: |
-          APK_PATH=$(find . -name "*.apk" -path "*/release/*" | head -1)
+          echo "🔍 Searching for APK files..."
+          
+          # Search all directories for APK
+          APK_PATH=$(find . -name "*.apk" -type f 2>/dev/null | head -1)
+          
           if [ -z "$APK_PATH" ]; then
             echo "❌ No APK found!"
+            echo "📁 Listing build directory:"
+            find . -type d -name "outputs" -exec ls -la {} \; 2>/dev/null
             exit 1
           fi
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "✅ Found APK: $APK_PATH"
-
-      - name: Sign APK (if unsigned)
-        id: sign_apk
-        run: |
-          APK_PATH="${{ steps.find_apk.outputs.apk_path }}"
           
-          # Check if APK is already signed
-          if $ANDROID_HOME/build-tools/*/apksigner verify "$APK_PATH" 2>/dev/null; then
-            echo "✅ APK is already signed"
-            echo "signed_apk=$APK_PATH" >> $GITHUB_OUTPUT
-          else
-            echo "⚠️ APK is unsigned, signing now..."
-            
-            # Create keystore
-            mkdir -p $HOME/.android
-            keytool -genkeypair \
-              -keystore $HOME/.android/release.keystore \
-              -alias release-key \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 10000 \
-              -storepass android \
-              -keypass android \
-              -dname "CN=GitHub Actions, OU=CI/CD, O=MyOrg, L=City, S=State, C=US"
-            
-            # Sign APK
-            SIGNED_APK="${APK_PATH%.apk}-signed.apk"
-            $ANDROID_HOME/build-tools/*/apksigner sign \
-              --ks $HOME/.android/release.keystore \
-              --ks-key-alias release-key \
-              --ks-pass pass:android \
-              --key-pass pass:android \
-              --out "$SIGNED_APK" \
-              "$APK_PATH"
-            
-            echo "signed_apk=$SIGNED_APK" >> $GITHUB_OUTPUT
-          fi
+          echo "✅ Found APK: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
 
       - name: Generate Timestamp and SHA-256
         id: generate_info
@@ -104,22 +62,24 @@ jobs:
           # Generate timestamp
           TIMESTAMP=$(date +'%Y%m%d_%H%M%S')
           READABLE_TIME=$(date +'%Y-%m-%d %H:%M:%S UTC')
-          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
-          echo "readable_time=$READABLE_TIME" >> $GITHUB_OUTPUT
           
-          # Get signed APK path
-          APK_PATH="${{ steps.sign_apk.outputs.signed_apk }}"
+          # Get APK path
+          APK_PATH="${{ steps.find_apk.outputs.apk_path }}"
           
           # Generate SHA-256
           SHA256=$(sha256sum "$APK_PATH" | awk '{print $1}')
-          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
-          
-          # Create checksum file
-          echo "$SHA256  $(basename $APK_PATH)" > SHA256SUMS.txt
           
           # Rename APK with timestamp
           NEW_APK_NAME="app-release-$TIMESTAMP.apk"
           cp "$APK_PATH" "$NEW_APK_NAME"
+          
+          # Create checksum file
+          echo "$SHA256  $NEW_APK_NAME" > SHA256SUMS.txt
+          
+          # Export outputs
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "readable_time=$READABLE_TIME" >> $GITHUB_OUTPUT
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
           echo "new_apk_name=$NEW_APK_NAME" >> $GITHUB_OUTPUT
           
           echo "✅ APK: $NEW_APK_NAME"
@@ -137,42 +97,31 @@ jobs:
           - **Branch:** \`${{ github.ref_name }}\`
           - **Workflow Run:** #${{ github.run_number }}
           
-          ## 🔐 Security Information
-          ### SHA-256 Checksum
+          ## 🔐 SHA-256 Checksum
           \`\`\`
           ${{ steps.generate_info.outputs.sha256 }}
           \`\`\`
           
-          ### Verification Commands
+          ## ✅ Verify Download
           
           **Linux/Mac:**
           \`\`\`bash
           sha256sum ${{ steps.generate_info.outputs.new_apk_name }}
           \`\`\`
           
-          **Windows (PowerShell):**
+          **Windows PowerShell:**
           \`\`\`powershell
           Get-FileHash ${{ steps.generate_info.outputs.new_apk_name }} -Algorithm SHA256
           \`\`\`
           
-          **Expected Output:**
-          \`\`\`
-          ${{ steps.generate_info.outputs.sha256 }}
-          \`\`\`
-          
-          ## 📦 Download & Install
-          1. Download the APK file below
-          2. Verify SHA-256 checksum matches
-          3. Enable "Install from Unknown Sources" in Android settings
-          4. Install the APK
-          
-          ## ⚙️ Build Environment
-          - **OS:** Ubuntu Latest
-          - **Java:** 17 (Temurin)
-          - **Build Tool:** Gradle
+          ## 📥 Install
+          1. Download the APK
+          2. Verify checksum matches above
+          3. Enable "Unknown Sources" in Android settings
+          4. Install APK
           
           ---
-          *🤖 Automated build via GitHub Actions*
+          *🤖 Auto-generated by GitHub Actions*
           EOF
 
       - name: Upload APK Artifact
@@ -199,14 +148,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Display Summary
+      - name: Build Summary
         run: |
           echo "## 🎉 Build Successful!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📦 APK Information" >> $GITHUB_STEP_SUMMARY
-          echo "- **File:** \`${{ steps.generate_info.outputs.new_apk_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Time:** ${{ steps.generate_info.outputs.readable_time }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **SHA-256:** \`${{ steps.generate_info.outputs.sha256 }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📥 Download" >> $GITHUB_STEP_SUMMARY
-          echo "Check the release or artifacts section to download the APK." >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **APK** | \`${{ steps.generate_info.outputs.new_apk_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Time** | ${{ steps.generate_info.outputs.readable_time }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **SHA-256** | \`${{ steps.generate_info.outputs.sha256 }}\` |" >> $GITHUB_STEP_SUMMARY
